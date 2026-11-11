@@ -594,6 +594,12 @@ class Device:
         """Get number of IP channels."""
         return self._device_info.struDeviceV30.byIPChanNum
 
+    @property
+    def start_dchan(self) -> int:
+        """Get starting channel number for digital/IP channels (typically 33)."""
+        v30 = self._device_info.struDeviceV30
+        return v30.byStartDChan + (v30.byHighDChanNum << 8)
+
     def logout(self) -> bool:
         """
         Logout from device.

@@ -69,26 +69,35 @@ def probe() -> list[dict]:
     sdk = HCNetSDK()
     sdk.init()
     device = sdk.login(host, port, user, password)
+    # Kênh analog: start_channel..+chanNum; kênh IP (đầu ghi): start_dchan (thường 33)..+ipChanNum
     first = device.start_channel or 1
-    total = device.channel_count + device.ip_channel_count
-    log(f"login OK, thử kênh {first}..{first + total - 1}")
+    channels = list(range(first, first + device.channel_count))
+    if device.ip_channel_count:
+        ip_first = device.start_dchan or 33
+        channels += range(ip_first, ip_first + device.ip_channel_count)
+    log(f"login OK, thử {len(channels)} kênh: {channels}")
 
     def on_data(handle, data_type, data):
         pass
 
     available = []
-    for channel in range(first, first + total):
+    no_pri = 0
+    for channel in channels:
         try:
             handle = device.start_preview(channel=channel, stream_type=STREAM_TYPE_SUB,
                                           link_mode=LINK_MODE_TCP, callback=on_data, blocked=True)
         except PreviewError as err:
-            if err.error_code != NET_DVR_NOENOUGHPRI:
+            if err.error_code == NET_DVR_NOENOUGHPRI:
+                no_pri += 1
+            else:
                 log(f"kênh {channel}: bỏ qua ({err})")
             continue
         device.stop_preview(handle)
         name = channel_name(device, channel) or f"Cam {channel:02d}"
         available.append({"channel": channel, "name": name})
         log(f"kênh {channel}: OK ({name})")
+    if no_pri:
+        log(f"{no_pri} kênh không có quyền (mã 2), tài khoản không được xem")
     return available
 
 

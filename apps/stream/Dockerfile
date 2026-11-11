@@ -21,7 +21,7 @@ RUN mkdir -p /data && chmod 1777 /data
 VOLUME ["/sdk", "/data"]
 
 WORKDIR /app
-COPY get_sdk.sh entrypoint.sh pull_stream.py discover.py timelapse.py /app/
+COPY get_sdk.sh entrypoint.sh pull_stream.py discover.py timelapse.py record.py /app/
 RUN chmod +x /app/entrypoint.sh
 
 EXPOSE 8888 9000 9001

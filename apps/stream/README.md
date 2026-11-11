@@ -15,6 +15,9 @@ Helm chart: `oci://ghcr.io/phuthuycoding/charts/hik-connect-proxy-viewer`.
 - `pull_stream.py`: HCNetSDK real-play callback -> ffmpeg `-f mpeg -c copy` -> RTSP publish to mediamtx.
 - `discover.py`: probes every channel, keeps the ones the account may view (with the recorder's channel
   names) and serves them on `:9000/channels`.
+- `record.py`: optional continuous MP4 recorder (`-c copy`, 10-min segments) for a time window, e.g.
+  06:00–20:00; reading the internal RTSP path counts as a viewer, so it triggers the on-demand pull.
+  Files land in `RECORD_DIR/ch<N>/YYYY-MM-DD_HH-MM.mp4`; `RECORD_KEEP_DAYS` prunes old files.
 - `get_sdk.sh`: Hikvision's SDK is **not** in this image. It is downloaded into `/sdk` at first start from
   hikvision.com (or from `HCNETSDK_ZIP_URL`). Mount a volume on `/sdk` to keep it.
 
@@ -43,6 +46,13 @@ list (`/channels`). Never run two replicas against the same account: each channe
 | `MTX_PUBLISH_BASE` | | RTSP publish base, must match `authInternalUsers` in mediamtx.yml |
 | `HCNETSDK_ZIP_URL` | | self-hosted SDK zip; empty = hikvision.com |
 | `DISCOVER_REFRESH_SECONDS` | `21600` | re-probe channels |
+| `RECORD_ENABLED` | `0` | `1` = continuous recording (see `record.py`) |
+| `RECORD_CHANNELS` | *(all discovered)* | channels to record, e.g. `42` or `42,33` |
+| `RECORD_START` / `RECORD_END` | `06:00` / `20:00` | recording window in `RECORD_TZ` |
+| `RECORD_TZ` | `Asia/Ho_Chi_Minh` | timezone for the window and file names |
+| `RECORD_SEGMENT_SECONDS` | `600` | segment length |
+| `RECORD_KEEP_DAYS` | `7` | delete files older than this; `0` = keep forever |
+| `RECORD_DIR` | `/records` | mount a host directory here for the MP4 segments |
 
 Platform: `linux/amd64` only (the SDK is x86_64). Tags: `latest`, `sha-<commit>`, `X.Y.Z`.
 

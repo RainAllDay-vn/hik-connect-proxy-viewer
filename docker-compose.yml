@@ -14,6 +14,8 @@ services:
       - stream_sdk:/sdk
       # Ảnh chụp trong ngày cho time-lapse (xoá sau khi gửi Telegram)
       - stream_data:/data
+      # Ghi hình liên tục (record.py, RECORD_ENABLED=1): MP4 nằm thẳng trên máy host
+      - ${RECORD_DIR:-/hik-connect/records}:/records
 
   # Trang web: màn login, cookie phiên, trang 2 cam, proxy HLS về stream
   web:

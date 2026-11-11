@@ -16,6 +16,8 @@ services:
       - stream_data:/data
       # Ghi hình liên tục (record.py, RECORD_ENABLED=1): MP4 nằm thẳng trên máy host
       - ${RECORD_DIR:-/hik-connect/records}:/records
+      # Cấu hình rclone cho upload (thư mục chứa rclone.conf trên host, upload.py đọc /config/rclone.conf)
+      - ${RCLONE_CONFIG_DIR:-/root/.config/rclone}:/config:ro
 
   # Trang web: màn login, cookie phiên, trang 2 cam, proxy HLS về stream
   web:

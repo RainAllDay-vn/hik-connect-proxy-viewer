@@ -2,6 +2,10 @@
 # Local: mounted into the container (docker compose restart stream). K8s: ConfigMap rendered by chart/.
 logLevel: info
 
+# API nội bộ (chỉ loopback): upload.py hỏi "có ai đang xem?" để điều tiết băng thông upload
+api: yes
+apiAddress: 127.0.0.1:9996
+
 authMethod: internal
 authInternalUsers:
   # pull_stream.py (ffmpeg) publishes from inside the container only

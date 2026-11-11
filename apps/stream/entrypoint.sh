@@ -13,4 +13,7 @@ python3 /app/timelapse.py &
 if [ "${RECORD_ENABLED}" = "1" ]; then
   python3 /app/record.py &
 fi
+if [ "${UPLOAD_ENABLED}" = "1" ]; then
+  python3 /app/upload.py &
+fi
 exec /usr/local/bin/mediamtx /mediamtx.yml

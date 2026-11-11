@@ -18,6 +18,8 @@ Helm chart: `oci://ghcr.io/phuthuycoding/charts/hik-connect-proxy-viewer`.
 - `record.py`: optional continuous MP4 recorder (`-c copy`, 10-min segments) for a time window, e.g.
   06:00–20:00; reading the internal RTSP path counts as a viewer, so it triggers the on-demand pull.
   Files land in `RECORD_DIR/ch<N>/YYYY-MM-DD_HH-MM.mp4`; `RECORD_KEEP_DAYS` prunes old files.
+- `upload.py`: optional rclone uploader for finished segments; throttles itself while someone is
+  watching (mediamtx API) and moves the local file only after the upload verifies.
 - `get_sdk.sh`: Hikvision's SDK is **not** in this image. It is downloaded into `/sdk` at first start from
   hikvision.com (or from `HCNETSDK_ZIP_URL`). Mount a volume on `/sdk` to keep it.
 
@@ -53,6 +55,12 @@ list (`/channels`). Never run two replicas against the same account: each channe
 | `RECORD_SEGMENT_SECONDS` | `600` | segment length |
 | `RECORD_KEEP_DAYS` | `7` | delete files older than this; `0` = keep forever |
 | `RECORD_DIR` | `/records` | mount a host directory here for the MP4 segments |
+| `UPLOAD_ENABLED` | `0` | `1` = upload finished segments via rclone (`upload.py`) |
+| `UPLOAD_REMOTE` | `gdrive:hik-connect-records` | rclone remote/path base; files go to `<base>/ch<N>/` |
+| `UPLOAD_BWLIMIT_WATCHING` | `2M` | upload bandwidth limit while a viewer is watching |
+| `UPLOAD_BWLIMIT_IDLE` | `off` | upload bandwidth limit when nobody is watching |
+| `UPLOAD_AFTER_SECONDS` | `120` | only upload files whose mtime is older than this |
+| `RCLONE_CONFIG` | `/config/rclone.conf` | mount the host rclone config dir on `/config` |
 
 Platform: `linux/amd64` only (the SDK is x86_64). Tags: `latest`, `sha-<commit>`, `X.Y.Z`.
 

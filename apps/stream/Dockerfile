@@ -3,8 +3,9 @@ FROM bluenviron/mediamtx:1.21.0 AS mediamtx
 FROM python:3.12-slim
 
 # ffmpeg remuxes the SDK stream; curl/unzip fetch Hikvision's SDK at first start (see sdk/README.md)
+# rclone uploads finished recording segments to Google Drive (see upload.py)
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends ffmpeg ca-certificates curl unzip fonts-dejavu-core tzdata \
+    && apt-get install -y --no-install-recommends ffmpeg ca-certificates curl unzip fonts-dejavu-core tzdata rclone \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=mediamtx /mediamtx /usr/local/bin/mediamtx
@@ -21,7 +22,7 @@ RUN mkdir -p /data && chmod 1777 /data
 VOLUME ["/sdk", "/data"]
 
 WORKDIR /app
-COPY get_sdk.sh entrypoint.sh pull_stream.py discover.py timelapse.py record.py /app/
+COPY get_sdk.sh entrypoint.sh pull_stream.py discover.py timelapse.py record.py upload.py /app/
 RUN chmod +x /app/entrypoint.sh
 
 EXPOSE 8888 9000 9001

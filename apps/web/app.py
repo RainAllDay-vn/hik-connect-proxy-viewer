@@ -22,10 +22,27 @@ log = logging.getLogger("web")
 
 def init_tracing() -> None:
     """OTel → Tempo. Fail-open: thiếu env/lỗi exporter chỉ warn, không chặn app."""
+    try:
+        from opentelemetry import trace
+
+        class TraceFilter(logging.Filter):
+            def filter(self, record):
+                sc = trace.get_current_span().get_span_context()
+                record.trace_id = format(sc.trace_id, "032x") if sc.is_valid else ""
+                return True
+
+        # Gắn filter vào handler thay vì logger: record từ logger con (vd aiohttp.access)
+        # chỉ đi qua handler của root, không qua filter của root logger. Không có OTEL
+        # get_current_span vẫn chạy (span rỗng) nên trace_id luôn được gán.
+        for handler in logging.getLogger().handlers:
+            handler.addFilter(TraceFilter())
+    except Exception as e:  # noqa: BLE001 — tracing không bao giờ chặn app
+        log.warning("otel disabled: %s", e)
+        return
+
     if not os.environ.get("OTEL_EXPORTER_OTLP_ENDPOINT"):
         return
     try:
-        from opentelemetry import trace
         from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
         from opentelemetry.instrumentation.aiohttp_server import AioHttpServerInstrumentor
         from opentelemetry.sdk.resources import Resource, SERVICE_NAME
@@ -36,14 +53,6 @@ def init_tracing() -> None:
         provider.add_span_processor(BatchSpanProcessor(OTLPSpanExporter()))
         trace.set_tracer_provider(provider)
         AioHttpServerInstrumentor().instrument()
-
-        class TraceFilter(logging.Filter):
-            def filter(self, record):
-                sc = trace.get_current_span().get_span_context()
-                record.trace_id = format(sc.trace_id, "032x") if sc.is_valid else ""
-                return True
-
-        logging.getLogger().addFilter(TraceFilter())
     except Exception as e:  # noqa: BLE001 — tracing không bao giờ chặn app
         log.warning("otel disabled: %s", e)
 
